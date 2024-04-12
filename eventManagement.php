@@ -1,16 +1,30 @@
+<?php session_start(); ?>
+<?php
+	//secure the page to only Admins
+	if(!isset($_SESSION['userType']) || $_SESSION['userType']!="Admin"){
+		echo "<script>location.href='index.php?err=rights';</script>";
+	}
+		
+?>
 <!DOCTYPE html>
 <html lang="en">
     <head>
         <title>SignMeUp - Event Management - Admin Home</title>
     
     	<?php include("includes/head.php"); ?>
+    	<?php include("includes/connect.php"); ?>
+    	<?php include("includes/participantsClass.php"); ?>
+    	<?php include("includes/eventsClass.php"); ?>
     	<style>
-    	    ol {
-    	        margin: 0;
-    	        padding: 0;
+    	    .eventsList ol{
+    	        display:none;
     	    }
-    	    ol li {
-    	        margin-left: 25px;
+    	    
+    	    #previousEvents{
+    	        display: none;
+    	    }
+    	    #upcomingEvents{
+    	        display:none;
     	    }
     	</style>
     
@@ -22,45 +36,137 @@
         <main role="main" class="container" >
     	    <h3>Admin Home - Event Management</h3>
     	    
-    	    <?php
+    	    <div id="filterOptions">
+    	        <form id="filterForm">
+                    <input class="displayAll" type="radio" name="filter" value="all" checked> All
+                    <input class="displayPrevious" type="radio" name="filter" value="previous"> Previous
+                    <input class="displayUpcoming" type="radio" name="filter" value="upcoming"> Upcoming
+                </form>
+            </div>
             
-            $usersDB = new mysqli("localhost", "beroz_admin", "121094Geffie002@@", "beroz_SignMeUp");
-            if(mysqli_connect_errno()){
-                echo "User Connection Error:".mysqli_connect_errno();
-            } 
             
-            $sql = "SELECT Events.id AS event_id, Events.name AS event_name, Events.location AS event_location, Events.date AS event_date, Events.time AS event_time, Participants.id AS participant_id, Users.first AS user_first, Users.last AS user_last, Users.email AS user_email, Users.phone AS user_phone
-                FROM Events
-                LEFT JOIN Participants ON Events.id = Participants.event
-                LEFT JOIN Users ON Participants.user = Users.id
-                ORDER BY Events.date, Events.time, Users.last";
             
-            $result = $usersDB->query($sql);
-            
-            $currEvent = null;
-            while ($row = $result->fetch_assoc()) {
-                // If it's a new event, output event details
-                if ($currEvent !== $row["event_id"]) {
-                    $currEvent = $row["event_id"];
-                    echo "<br>";
-                    echo "<hr>";
-                    echo "<div>";
-                    echo "<h2>{$row['event_name']}</h2>";
-                    echo "<p><strong>Scheduled:</strong> {$row['event_date']} @ {$row['event_time']}</p>";
-                    echo "<p><strong>Location:</strong> {$row['event_location']}</p>";
-                    echo "<ol><strong>Participants:</strong> ";
-                }
-        
-                // Output participant details
-                echo "<li>{$row['user_last']}, {$row['user_first']} - <a href='mailto:{$row['user_email']}'>{$row['user_email']}</a> | {$row['user_phone']}</li>";
-            }
-            echo "</ol>";
-            echo "</div>";
-
-            
-            ?>
-
+            <div id="eventContainer">
+                <?php $date = "2022-04-12"; ?>
+                <div id="allEvents">
+                    <br><h4>All Events</h4>
+                    <?php 
+                    // ALL EVENTS
+                    
+                    error_reporting(E_ALL);
+                    ini_set('display_errors', 1);
+                    
+                    $sql = "SELECT * FROM events ORDER BY date, time";
+                    $result = $smeConn->query($sql);
+                    
+                    if ($result->num_rows > 0) {
+                        while ($row = $result->fetch_assoc()) {
+                            $event = createEventFromDB($row['id']);
+                            
+                            echo "<section class='eventsList'>";
+                            echo $event->getBSRow();
+    
+                            $participants = createPartFromDB($row['id']);
+                            echo "<ol>";
+                            foreach ($participants as $participant) {
+                                echo "<li class='row'>";
+                                echo $participant->getBSRow();
+                                echo "</li>";
+                            }
+                                
+                            echo "</ol>";
+                            echo "</section>";
+    
+                        }
+                    } else {
+                        echo "No events found.";
+                    }
+                    ?>
+                </div>
+                <div id="previousEvents">
+                    <br><h4>Previous Events</h4>
+                    <?php
+                    // PREVIOUS EVENTS
+                    
+                    $sql = "SELECT * FROM events WHERE date < '$date' ORDER BY date, time";
+                    $result = $smeConn->query($sql);
+                    
+                    if ($result->num_rows > 0) {
+                        while ($row = $result->fetch_assoc()) {
+                            $event = createEventFromDB($row['id']);
+                            
+                            echo "<section class='eventsList'>";
+                            echo $event->getBSRow();
+    
+                            $participants = createPartFromDB($row['id']);
+                            echo "<ol>";
+                            foreach ($participants as $participant) {
+                                echo "<li class='row'>";
+                                echo $participant->getBSRow();
+                                echo "</li>";
+                            }
+                                
+                            echo "</ol>";
+                            echo "</section>";
+    
+                        }
+                    } else {
+                        echo "No events found.";
+                    }
+                    ?>
+                </div>
+                <div id="upcomingEvents">
+                    <br><h4>Upcoming Events</h4>
+                    <?php
+                    //UPCOMING EVENTS
+                    
+                    $sql = "SELECT * FROM events WHERE date >= '$date' ORDER BY date, time";
+                    $result = $smeConn->query($sql);
+                    
+                    if ($result->num_rows > 0) {
+                        while ($row = $result->fetch_assoc()) {
+                            $event = createEventFromDB($row['id']);
+                            
+                            echo "<section class='eventsList'>";
+                            echo $event->getBSRow();
+    
+                            $participants = createPartFromDB($row['id']);
+                            echo "<ol>";
+                            foreach ($participants as $participant) {
+                                echo "<li class='row'>";
+                                echo $participant->getBSRow();
+                                echo "</li>";
+                            }
+                                
+                            echo "</ol>";
+                            echo "</section>";
+    
+                        }
+                    } else {
+                        echo "No events found.";
+                    }
+                    
+                    ?>
+                </div>
+            </div>
+    	
+    	
+    
         </main><!-- /.container -->
         <?php include("includes/footer.php"); ?>
+        <script>
+            $(document).ready(function(){
+                
+                $("input[name='filter']").change(function(){
+                    $("#allEvents, #previousEvents, #upcomingEvents").hide();
+                    $("#" + $(this).val() + "Events").show();
+                });
+
+                
+                $(".eventsList").click(function(){
+                    $(this).find('ol').slideToggle();
+                });//end h4 click
+            });//end ready
+        </script>
     </body>
 </html>
