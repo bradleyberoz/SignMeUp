@@ -1,3 +1,10 @@
+<?php session_start(); ?>
+<?php
+	//handle error codes
+	//err=rights -> user rights issue
+	if(isset($_GET['err']) && $_GET['err']=="rights")
+		echo "<script>alert('You do not have rights to see that page.  Either log in or contact your system admin.');</script>";
+?>
 <!DOCTYPE html>
 <html lang='en'>
     <head>
@@ -160,31 +167,7 @@
         </main><!-- /.container -->
 
         <?php include("includes/footer.php"); ?>
-
-        <!-- Sign in Modal -->
-        <!-- Modal -->
-        <div class="modal fade" id="signInModal" tabindex="-1" aria-labelledby="signInModalLabel" aria-hidden="true">
-          <div class="modal-dialog">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title" id="signInModalLabel">Sign In</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-              </div>
-              <div class="modal-body">
-                  <div class="mb-3">
-                    <input type="email" class="form-control" id="signin-email"  placeholder='Email'>
-                  </div>
-                  <div class="mb-3">
-                    <input type="password" class="form-control" id="signin-password"  placeholder='Password'>
-                  </div>
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Sign In</button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <?php include("includes/signinModal.php"); ?>
     
     </body>
 </html>
