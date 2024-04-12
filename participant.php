@@ -1,9 +1,18 @@
+<?php session_start(); ?>
+<?php
+	//secure the page to only Admins and Organizers and Users
+	if(!isset($_SESSION['userType']) || ($_SESSION['userType']!="Admin" && $_SESSION['userType']!="Organizer" && $_SESSION['userType']!="User")){
+		echo "<script>location.href='index.php?err=rights';</script>";
+	}
+		
+?>
 <!DOCTYPE html>
 <html lang="en">
     <head>
         <title>SignMeUp - Event Management - Participant Home</title>
     
     	<?php include("includes/head.php"); ?>
+    	<?php include("includes/connect.php"); ?>
     
     </head>
     <body>
@@ -11,40 +20,30 @@
            <?php include("includes/nav.php"); ?>
         </header>
         <main role="main" class="container" >
+            <!--
+        	    On the participant page show a list of all the events the user 
+        		is signed up for in chronological order.  Include the event name, 
+        		location, date and time.  
+        	-->
     	    <h3>Participant Home</h3>
-    	    
             <?php
-            
-            if (isset($_GET['user_id'])) {
-                $user_id = $_GET['user_id'];
+        		if(isset($_SESSION['id'])){
+        			$userid=$_SESSION['id'];
+        			$sql="select events.id, events.name, events.time, events.location, events.date, participants.event from participants, events where participants.user=$userid AND participants.event=events.id order by events.date, events.time";
+        			$result=$smeConn->query($sql);
+        			while($row=$result->fetch_assoc()){
+        				echo "<h4 class='row'>";
+        				echo "<div class='col-4'>".$row['name']."</div>";
+        				echo "<div class='col-4'>".date("m/d/Y", strtotime($row['date'])).", ".date("h:m a", strtotime($row['time']))."</div>";
+        				echo "<div class='col-4'>".$row['location']."</div>";
+        				echo "</h4>";
+        			
         
-                $usersDB = new mysqli("localhost", "beroz_admin", "121094Geffie002@@", "beroz_SignMeUp");
-                if(mysqli_connect_errno()){
-                    echo "User Connection Error:".mysqli_connect_errno();
-                }
-        
-                $sql = "SELECT Events.name AS event_name, Events.location AS event_location, Events.date AS event_date, Events.time AS event_time
-                    FROM Events
-                    INNER JOIN Participants ON Events.id = Participants.event
-                    WHERE Participants.user = $user_id
-                    ORDER BY Events.date, Events.time";
-        
-                $result = $usersDB->query($sql);
-                
-                
-                if ($result->num_rows == 0) {
-                    echo "<p>This user is not signed up for any events.</p>";
-                }
-                
-                echo "<ul>";
-                while ($row = $result->fetch_assoc()) {
-                    echo "<li>{$row['event_name']} - {$row['event_location']} - Date: {$row['event_date']} Time: {$row['event_time']}</li>";
-                }
-                echo "</ul>";
-            }
-            
-            ?>
-    
+        			}
+        		
+        		}//end get if
+        		
+        	?>
     	
     	
     
